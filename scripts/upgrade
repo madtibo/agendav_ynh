@@ -22,8 +22,10 @@ caldav_baseurl="$(cut -d " " -f 2 <<< "$caldav_info")"
 #=================================================
 ynh_script_progression "Upgrading source files..."
 
-# Download, check integrity, uncompress and patch the source from manifest.toml
-ynh_setup_source --dest_dir="$install_dir" --keep="web/config/settings.php"
+# Download, check integrity, uncompress the source from manifest.toml.
+# settings.php is regenerated below from the template + stored $encryptkey, so it
+# is intentionally not --kept: the pre-3.0 (Silex) format is incompatible anyway.
+ynh_setup_source --dest_dir="$install_dir"
 
 chmod 750 "$install_dir"
 chmod -R o-rwx "$install_dir"
