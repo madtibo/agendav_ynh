@@ -20,10 +20,9 @@ ynh_print_info "Declaring files to be backed up..."
 #=================================================
 
 # Clean cache files before backup
-ynh_safe_rm "$install_dir/web/var/cache/profiler"
-ynh_safe_rm "$install_dir/web/var/cache/twig"
-mkdir -p "$install_dir/web/var/cache/"{profiler,twig}
-chown -R "$app" "$install_dir/web/var/cache/"{profiler,twig}
+ynh_safe_rm "$install_dir/var/cache"
+mkdir -p "$install_dir/var/cache"
+chown -R "$app" "$install_dir/var"
 
 ynh_backup "$install_dir"
 

@@ -57,6 +57,11 @@ encryptkey=$(ynh_string_random --length=24)
 
 ynh_app_setting_set --app="$app" --key=encryptkey --value="$encryptkey"
 
+# Generate the session encryption key (64 hex chars = 32 bytes, for sodium)
+session_key=$(openssl rand -hex 32)
+
+ynh_app_setting_set --app="$app" --key=session_key --value="$session_key"
+
 # Copy and set AgenDAV configuration
 timezone=$(timedatectl show --value --property=Timezone)
 
@@ -65,7 +70,7 @@ caldav_path=$(ynh_app_setting_get --app="$caldav_app" --key=path)
 caldav_url="https://${caldav_domain}${caldav_path%/}"
 caldav_baseurl="${caldav_url}${caldav_baseurl}"
 
-ynh_config_add --template="../conf/settings.php" --destination="${install_dir}/web/config/settings.php"
+ynh_config_add --template="../conf/settings.php" --destination="${install_dir}/config/settings.php"
 
 #=================================================
 # RUN DATABASE MIGRATIONS (INCLUDES INITIALIZATION)
@@ -74,18 +79,19 @@ ynh_script_progression "Initialising $app..."
 
 (
     cd "$install_dir" || ynh_die "Unable to access $install_dir"
-    "php$php_version" agendavcli migrations:migrate --no-interaction
+    "php$php_version" bin/agendavcli migrations:migrate --no-interaction
 )
 
 chown -R "$app:www-data" "$install_dir"
 
-# Only agendav user should write here
-chown -R "$app" "$install_dir/web/var/cache/"{profiler,twig}
+# Only agendav user should write here (twig cache, doctrine cache, etc.)
+mkdir -p "$install_dir/var/cache"
+chown -R "$app" "$install_dir/var"
 
 # The agendav user should read here, but does not need to write
 # Other users should not be able to read as it stores passwords.
-chown -R "$app:www-data" "$install_dir/web/config/"
-chmod -R 750 "$install_dir/web/config/"
+chown -R "$app:www-data" "$install_dir/config/"
+chmod -R 750 "$install_dir/config/"
 
 #=================================================
 # END OF SCRIPT

@@ -23,13 +23,14 @@ chown -R "$app:www-data" "$install_dir"
 
 chown -R "$app:www-data" "$install_dir"
 
-# Only agendav user should write here
-chown -R "$app" "$install_dir/web/var/cache/"{profiler,twig}
+# Only agendav user should write here (twig cache, doctrine cache, etc.)
+mkdir -p "$install_dir/var/cache"
+chown -R "$app" "$install_dir/var"
 
 # The agendav user should read here, but does not need to write
 # Other users should not be able to read as it stores passwords.
-chown -R "$app:www-data" "$install_dir/web/config/"
-chmod -R 750 "$install_dir/web/config/"
+chown -R "$app:www-data" "$install_dir/config/"
+chmod -R 750 "$install_dir/config/"
 
 #=================================================
 # RESTORE THE MYSQL DATABASE
