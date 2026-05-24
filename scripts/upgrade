@@ -55,6 +55,13 @@ ynh_config_add_logrotate
 #=================================================
 ynh_script_progression "Updating a configuration file..."
 
+# Generate the session encryption key if it does not exist yet (installs predating the
+# managed key relied on the var/session.key fallback, which is not writable here)
+if [ -z "${session_key:-}" ]; then
+    session_key=$(openssl rand -hex 32)
+    ynh_app_setting_set --app="$app" --key=session_key --value="$session_key"
+fi
+
 # Copy and set AgenDAV configuration
 timezone=$(timedatectl show --value --property=Timezone)
 

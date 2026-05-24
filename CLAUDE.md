@@ -24,13 +24,15 @@ Uses **packaging format v2** (`packaging_format = 2`). The schema is referenced 
 
 **SSO/HTTP-auth is native, enabled by config.** AgenDAV 3.0.0 ships `\AgenDAV\Authentication\HttpBasic` (in `web/src/Authentication/`), which reads `PHP_AUTH_USER`/`PHP_AUTH_PW`. `conf/settings.php` enables it via `'auth.methods' => [\AgenDAV\Authentication\HttpBasic::class]`, so users authenticate transparently from YunoHost's SSO. `conf/nginx.conf` must forward the credentials: `fastcgi_param REMOTE_USER $remote_user;` **and** `fastcgi_param HTTP_AUTHORIZATION $http_authorization;` (HttpBasic requires the `HTTP_AUTHORIZATION` server param). There is **no source patch** anymore (the old `app-00-add-http-auth.patch` against Silex's `web/app/controllers.php` was removed).
 
+**The session encryption key is managed.** AgenDAV encrypts the CalDAV password it keeps in each session (`web/app/services.php` `password.cipher`). `conf/settings.php` sets `session.encryption.key` from a generated `session_key` app setting (`openssl rand -hex 32`, created in `install`, backfilled in `upgrade`). This is **required**, not optional: the upstream fallback writes a key file to `dirname(log.path)/session.key` = `/var/log/session.key` (our `log.path` is `/var/log/$app/`), which the app user can't create — leaving it unset breaks the first login.
+
 **Database migrations run on both install and upgrade** via `php$php_version agendavcli migrations:migrate --no-interaction` (this also initializes the schema on first install).
 
 **Permissions are security-sensitive.** `web/config/` holds CalDAV passwords and is locked to `750` / `$app:www-data` (group-readable by the web server, not world-readable). `web/var/cache/{profiler,twig}` is owned by `$app` so the app can write it. Backup cleans these cache dirs before archiving.
 
 ## YunoHost version & helpers
 
-Targets **YunoHost ≥ 12.0** (`[integration]`) and uses **helpers v2.1**: positional `ynh_script_progression "msg"` / `ynh_die "msg"` (no `--message`/`--weight`), the `ynh_config_add*` / `ynh_config_remove*` namespace, `ynh_systemctl`, `ynh_safe_rm`, `ynh_backup`/`ynh_restore` (positional paths), and `ynh_mysql_dump_db` / `ynh_mysql_db_shell`. Do not reintroduce the YNH 11 names (`ynh_add_config`, `ynh_systemd_action`, `ynh_secure_remove`, `ynh_check_app_version_changed`, etc.) — the upgrade script intentionally has no `upgrade_type` guard and always re-runs `ynh_setup_source`.
+Targets **YunoHost ≥ 12.1.17** (`[integration]`) and uses **helpers v2.1**. This requires `helpers_version = "2.1"` under `[integration]` in `manifest.toml`: without it YunoHost 12 loads the **2.0** helpers and every `ynh_config_*` call dies with `command not found` (exit 127). The 2.1 set means positional `ynh_script_progression "msg"` / `ynh_die "msg"` (no `--message`/`--weight`), the `ynh_config_add*` / `ynh_config_remove*` namespace, `ynh_systemctl`, `ynh_safe_rm`, `ynh_backup`/`ynh_restore` (positional paths), and `ynh_mysql_dump_db` / `ynh_mysql_db_shell`. Do not reintroduce the YNH 11 names (`ynh_add_config`, `ynh_systemd_action`, `ynh_secure_remove`, `ynh_check_app_version_changed`, etc.) — the upgrade script intentionally has no `upgrade_type` guard and always re-runs `ynh_setup_source`.
 
 ## PHP version constraint
 

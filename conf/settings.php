@@ -25,6 +25,11 @@ return [
     // CSRF secret (required)
     'csrf.secret' => '__ENCRYPTKEY__',
 
+    // Encrypts CalDAV credentials stored in the session. Set explicitly because the
+    // var/session.key fallback resolves to dirname(log.path)=/var/log, which is not
+    // writable by the app user. Must be 64 hex chars (32 bytes).
+    'session.encryption.key' => '__SESSION_KEY__',
+
     // Log path
     'log.path' => '/var/log/__APP__/',
     'log.level' => 'INFO',

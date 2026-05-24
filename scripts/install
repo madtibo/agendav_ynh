@@ -57,6 +57,11 @@ encryptkey=$(ynh_string_random --length=24)
 
 ynh_app_setting_set --app="$app" --key=encryptkey --value="$encryptkey"
 
+# Generate the session encryption key (64 hex chars = 32 bytes, for sodium)
+session_key=$(openssl rand -hex 32)
+
+ynh_app_setting_set --app="$app" --key=session_key --value="$session_key"
+
 # Copy and set AgenDAV configuration
 timezone=$(timedatectl show --value --property=Timezone)
 
